@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">AntiLost</string>
     <string name="title_activity_maps">Map</string>
+    <string name="contactAddress">SIP Address to contact:</string>
+    <string name="talk">Talk</string>
+    <string name="push_to_talk">Push To Talk</string>
 </resources>
