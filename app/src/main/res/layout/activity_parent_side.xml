@@ -1,0 +1,72 @@
+<!--<fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:id="@+id/map" tools:context=".parent_side"
+    android:name="com.google.android.gms.maps.SupportMapFragment" />
+-->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapActivity" >
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:id="@+id/map" tools:context=".parent_side"
+        android:name="com.google.android.gms.maps.SupportMapFragment" />
+    <RadioGroup
+        android:id="@+id/radio_group_list_selector"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:background="#80000000"
+        android:padding="4dp" >
+
+        <View
+            android:id="@+id/VerticalLine"
+            android:layout_width="1dip"
+            android:layout_height="match_parent"
+            android:background="#aaa" />
+    </RadioGroup>
+
+    <!--Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="124dp"
+        android:layout_height="83dp"
+        android:text="Talk"
+        android:id="@+id/button"
+        android:layout_gravity="left|bottom" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="124dp"
+        android:layout_height="83dp"
+        android:text="Listen"
+        android:id="@+id/button2"
+        android:layout_gravity="right|bottom" /-->
+
+    <ToggleButton
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="124dp"
+        android:layout_height="83dp"
+        android:text="Talk"
+        android:id="@+id/pushToTalk"
+
+        android:layout_gravity="right|bottom" />
+
+    <ToggleButton
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="124dp"
+        android:layout_height="83dp"
+        android:text="Listen"
+        android:id="@+id/pushToListen"
+
+        android:layout_gravity="right|bottom" />
+
+    <ZoomControls
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/zoomControls"
+        android:layout_gravity="right|top" />
+</FrameLayout>
+
