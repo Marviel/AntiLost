@@ -22,22 +22,22 @@ import android.content.Intent;
 import android.net.sip.SipAudioCall;
 import android.net.sip.SipProfile;
 
-import name.lukebechtel.antilost.WalkieTalkieActivity;
+import name.lukebechtel.antilost.AntilostActivity;
 
 /**
- * Listens for incoming SIP calls, intercepts and hands them off to WalkieTalkieActivity.
+ * Listens for incoming SIP calls, intercepts and hands them off to AntilostActivity.
  */
 public class IncomingCallReceiver extends BroadcastReceiver {
     /**
      * Processes the incoming call, answers it, and hands it over to the
-     * WalkieTalkieActivity.
+     * AntilostActivity.
      * @param context The context under which the receiver is running.
      * @param intent The intent being received.
      */
     @Override
     public void onReceive(Context context, Intent intent) {
         SipAudioCall incomingCall = null;
-        final WalkieTalkieActivity wtActivity = (WalkieTalkieActivity) context;
+        final AntilostActivity wtActivity = (AntilostActivity) context;
         
         try {
 

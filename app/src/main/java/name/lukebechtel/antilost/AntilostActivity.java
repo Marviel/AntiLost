@@ -1,10 +1,13 @@
 package name.lukebechtel.antilost;
 
+import android.content.Context;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import android.app.Activity;
@@ -33,10 +36,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import android.location.LocationManager;
+import android.location.LocationListener;
+import android.location.Location;
+import android.location.LocationProvider;
 
 import java.text.ParseException;
 
-public class AntilostActivity extends FragmentActivity implements View.OnTouchListener {
+public class AntilostActivity extends FragmentActivity implements View.OnTouchListener, OnMapReadyCallback {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     public String sipAddress = null;
@@ -53,14 +60,47 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_parent_side);
+//        setUpMapIfNeeded();
+//
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_parent_side);
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        Log.i("Antilost/onCreate", "about to getMapAsync");
+        mapFragment.getMapAsync(this);
+        Log.i("Antilost/onCreate", "after getMapAsync");
 
         if(SipManager.isVoipSupported(getBaseContext()) && SipManager.isApiSupported(getBaseContext()))
             Toast.makeText(getApplicationContext(), "SIP is supported!", Toast.LENGTH_LONG).show();
         else
-            Toast.makeText(getApplicationContext(), "SIP NOT supported. App will not work", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "SIP NOT supported. App will not work! testing123", Toast.LENGTH_LONG).show();
+
+
+        /* ------------LOCATION------- */
+        // Acquire a reference to the system Location Manager
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                Log.i("Antilost/initiateCall", "onLocationChanged!!!!");
+                makeUseOfNewLocation(location);
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+
+        // Register the listener with the Location Manager to receive location updates
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+
+
 
         ToggleButton pushToTalkButton = (ToggleButton) findViewById(R.id.pushToTalk);
         pushToTalkButton.setOnTouchListener(this);
@@ -124,6 +164,15 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
+    @Override
+    public void onMapReady(GoogleMap map) {
+        // Add a marker in Sydney, Australia, and move the camera.
+        Log.i("Antilost/onMapReady", "map ready...");
+        LatLng sydney = new LatLng(-34, 151);
+        map.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        map.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+    }
 
 
     @Override
@@ -241,8 +290,9 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
      * Make an outgoing call.
      */
     public void initiateCall() {
+        Log.i("Antilost/initiateCall", "begin initiating call!");
 
-        updateStatus(sipAddress);
+                updateStatus(sipAddress);
 
         try {
             SipAudioCall.Listener listener = new SipAudioCall.Listener() {
@@ -251,6 +301,7 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
                 // forget to set up a listener to set things up once the call is established.
                 @Override
                 public void onCallEstablished(SipAudioCall call) {
+                    Log.i("Antilost/initiateCall", "Call established!");
                     call.startAudio();
                     call.setSpeakerMode(true);
                     if(!call.isMuted())
@@ -261,6 +312,7 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
 
                 @Override
                 public void onCallEnded(SipAudioCall call) {
+                    Log.i("Antilost/initiateCall", "Ready.");
                     updateStatus("Ready.");
                 }
 
@@ -268,15 +320,23 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
                 public void onCalling(SipAudioCall call) {
                     if(!call.isMuted())
                         call.toggleMute();
+                    Log.i("Antilost/initiateCall", "calling...");
                     updateStatus("Calling...");
+                }
+
+                @Override
+                public void onError(SipAudioCall call, int errorCode, String errorMessage) {
+                    Log.i("Antilost/initiateCall", String.format("ERROR Calling; %d: %s",
+                                                                    errorCode,errorMessage));
                 }
             };
 
+            Log.i("Antilost/initiateCall", String.format("makeAudioCall(%s,%s,..",me.getUriString(), sipAddress));
             call = manager.makeAudioCall(me.getUriString(), sipAddress, listener, 30);
 
         }
         catch (Exception e) {
-            Log.i("Antilost/InitiateCall", "Error when trying to close manager.", e);
+            Log.i("Antilost/initiateCall", "Error when trying to close manager.", e);
             if (me != null) {
                 try {
                     manager.close(me.getUriString());
@@ -419,5 +479,10 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
         Intent settingsActivity = new Intent(getBaseContext(),
                 SipSettings.class);
         startActivity(settingsActivity);
+    }
+
+    public void makeUseOfNewLocation(Location loc) {
+        Log.i("Antilost/initiateCall", "MakeUseofNewLocation!");
+        mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title("Marker"));
     }
 }

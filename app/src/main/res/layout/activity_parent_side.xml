@@ -4,6 +4,7 @@
     android:name="com.google.android.gms.maps.SupportMapFragment" />
 -->
 
+
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,10 +12,13 @@
     tools:context=".MapActivity" >
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-        android:layout_height="match_parent" android:id="@+id/map" tools:context=".parent_side"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/map"
+        tools:context=".parent_side"
         android:name="com.google.android.gms.maps.SupportMapFragment" />
-    <RadioGroup
+    <!--RadioGroup
         android:id="@+id/radio_group_list_selector"
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -27,7 +31,15 @@
             android:layout_width="1dip"
             android:layout_height="match_parent"
             android:background="#aaa" />
-    </RadioGroup>
+    </RadioGroup!-->
+
+    <TextView
+        android:id="@+id/sipLabel"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_centerHorizontal="true"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+    />
 
     <!--Button
         style="?android:attr/buttonStyleSmall"
@@ -61,12 +73,12 @@
         android:text="Listen"
         android:id="@+id/pushToListen"
 
-        android:layout_gravity="right|bottom" />
+        android:layout_gravity="left|bottom" />
 
-    <ZoomControls
+    <!--ZoomControls
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/zoomControls"
-        android:layout_gravity="right|top" />
+        android:layout_gravity="right|top" /-->
 </FrameLayout>
 
