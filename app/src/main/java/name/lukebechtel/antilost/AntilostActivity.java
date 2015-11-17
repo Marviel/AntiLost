@@ -1,6 +1,8 @@
 package name.lukebechtel.antilost;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -41,7 +43,30 @@ import android.location.LocationListener;
 import android.location.Location;
 import android.location.LocationProvider;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 public class AntilostActivity extends FragmentActivity implements View.OnTouchListener, OnMapReadyCallback {
 
@@ -57,6 +82,14 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
     private static final int SET_AUTH_INFO = 2;
     private static final int UPDATE_SETTINGS_DIALOG = 3;
     private static final int HANG_UP = 4;
+
+    private static final String serveraddr = "http://ec2-52-89-85-85.us-west-2.compute.amazonaws.com:3000/locations/1";
+
+    public boolean NewLocation = false;
+    public float xLoc = 0;
+    public float yLoc = 0;
+
+    public boolean Parent = true; //Switch this for child build
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,17 +194,13 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
         // Add a marker in Sydney, Australia, and move the camera.
         Log.i("Antilost/onMapReady", "map ready...");
-        LatLng sydney = new LatLng(-34, 151);
-        map.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        map.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
     }
 
 
@@ -483,6 +512,108 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
 
     public void makeUseOfNewLocation(Location loc) {
         Log.i("Antilost/initiateCall", "MakeUseofNewLocation!");
-        mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title("Marker"));
+        //CHILD / PARENT switch
+        if(Parent) {
+            mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title("YOU ARE HERE"));
+
+            ExecuteGet executeGet = new ExecuteGet();
+            executeGet.execute();
+        }
+        else{ //Child
+            ExecuteSend executeSend = new ExecuteSend();
+            executeSend.execute(loc.getLatitude(), loc.getLongitude());
+        }
+    }
+
+
+    private class ExecuteGet extends AsyncTask<Void,Void,String>{
+        private String responseString;
+        @Override
+        protected String doInBackground(Void... params) {
+            HttpClient client = new DefaultHttpClient();
+            HttpGet request = new HttpGet(serveraddr);
+            HttpResponse response;
+            try {
+                response = client.execute(request);
+                HttpEntity entity = response.getEntity();
+                responseString = EntityUtils.toString(entity, "UTF-8");
+                Log.d("Antilost/GetReqResponse", responseString);
+                JSONObject obj = new JSONObject(responseString);
+                final float x = Float.parseFloat(obj.getString("x"));
+                final float y = Float.parseFloat(obj.getString("y"));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mMap.clear();
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(x, y)).title("Vasu"));
+                    }
+                });
+
+            } catch (ClientProtocolException e) {
+                Log.e("Antilost/HTTPError", e.toString());
+                // e.printStackTrace();
+            } catch (Exception e) {
+                Log.e("Antilost/HTTPError", e.toString());
+            }
+            return "";
+        }
+
+        @Override
+        protected void onPostExecute(String aVoid) {
+        }
+    }
+
+    private class ExecuteSend extends AsyncTask<Double,Void,String>{
+        private double x;
+        private double y;
+        @Override
+        protected String doInBackground(Double... params) {
+            HttpClient httpClient = new DefaultHttpClient();
+
+            HttpPut httpPut = new HttpPut(serveraddr);
+            List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
+            try {
+                Log.d("Antilost/gothere", "woooo!");
+                Log.d("Antilost/params", Integer.toString(params.length));
+
+                x = params[0];
+                y = params[1];
+
+                Log.d("Antilost/nameValSize", Integer.toString(nameValuePair.size()));
+                nameValuePair.add(new BasicNameValuePair("x", Double.toString(x)));
+                nameValuePair.add(new BasicNameValuePair("y", Double.toString(y)));
+                Log.d("Antilost/nameValuePair", nameValuePair.toString());
+            } catch(Exception e){
+                Log.e("Antilost/nameValueError", e.toString());
+            }
+
+            //Encoding POST data
+            try {
+                UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(nameValuePair);
+                Log.d("Antilost/uefe", uefe.toString());
+                httpPut.setEntity(uefe);
+
+            } catch (UnsupportedEncodingException e)
+            {
+                e.printStackTrace();
+            }
+
+            try {
+                HttpResponse response = httpClient.execute(httpPut);
+                // write response to log
+                Log.d("AntiLost/HTTPPut", response.toString());
+            } catch (ClientProtocolException e) {
+                // Log exception
+                e.printStackTrace();
+            } catch (IOException e) {
+                // Log exception
+                e.printStackTrace();
+            }
+            return "";
+        }
+
+        @Override
+        protected void onPostExecute(String aVoid) {
+        }
     }
 }
