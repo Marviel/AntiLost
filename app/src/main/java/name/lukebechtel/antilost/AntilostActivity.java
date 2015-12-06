@@ -518,6 +518,8 @@ public class AntilostActivity extends FragmentActivity implements View.OnTouchLi
 
             ExecuteGet executeGet = new ExecuteGet();
             executeGet.execute();
+            ExecuteSend executeSend = new ExecuteSend();
+            executeSend.execute(loc.getLatitude(), loc.getLongitude());
         }
         else{ //Child
             ExecuteSend executeSend = new ExecuteSend();
